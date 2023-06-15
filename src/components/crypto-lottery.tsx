@@ -21,7 +21,7 @@ const CryptoLottery: React.FC = () => {
                 if (n + 1 === 64) {
                     generateAddress()
                 }
-                return n+1
+                return n + 1
             })
         }
         console.log(selected)
@@ -44,7 +44,9 @@ const CryptoLottery: React.FC = () => {
     }
 
     const openOnEtherScan = () => {
-        window.open(`https://etherscan.io/address/${address}`)
+        if (selectedNum === 64) {
+            window.open(`https://etherscan.io/address/${address}`)
+        }
     }
 
     return (
