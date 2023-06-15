@@ -8,7 +8,7 @@ import './crypto-lottery.css';
 const CryptoLottery: React.FC = () => {
     const grid = Array.from({ length: 64 }, () => Array.from({ length: 16 }, (_, i) => i.toString(16)))
 
-    const [selected, setSelected] = useState<string[]>([]);
+    const [selected, setSelected] = useState<string[]>(''.split(''));
     const [selectedNum, setSelectedNum] = useState<number>(0)
     const [address, setAddress] = useState<string>('');
     const [key, setKey] = useState<string>('')
@@ -52,7 +52,7 @@ const CryptoLottery: React.FC = () => {
             <button className="clear-button" onClick={handleClearClick}>Clear</button>
             {<div className="key">Private Key: 0x{key}</div>}
             {<div className="address" onClick={openOnEtherScan}>Address(click to open): {address}</div>}
-            <div className="grid">
+            <div className={`grid ${selectedNum === 64 ? "done" : ""}`}>
                 {grid.map((row, rowIndex) => (
                     <div key={`row-${rowIndex}`} className={`row`}>
                         <div>{selected[rowIndex] === undefined ? "⚫️" : "🟢"}</div>
@@ -60,7 +60,7 @@ const CryptoLottery: React.FC = () => {
                             <div
                                 key={cubeIndex}
                                 onMouseEnter={() => drawOne(rowIndex, cube)}
-                                className={`cube ${selected[rowIndex] === cube ? "selected" : ""}`}>
+                                className={`cube ${selected[rowIndex] === cube ? "selected" : "unselected"}`}>
                                 {cube}
                             </div>
                         ))}
