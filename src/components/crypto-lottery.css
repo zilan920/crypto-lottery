@@ -40,9 +40,6 @@
     background-color: #96c78c;
   }
 
-  .done .unselected {
-    visibility: hidden;
-  }
   
   .start-button,
   .clear-button {

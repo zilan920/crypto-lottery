@@ -1,75 +1,70 @@
 "use client"
 
-import React, { useState } from 'react';
-import { ethers } from 'ethers';
+import React, {useEffect, useMemo, useState} from 'react';
+import {ethers} from 'ethers';
 
 import './crypto-lottery.css';
+import * as crypto from "crypto";
+import {useRequest} from "ahooks";
 
+const API_KEY = "UBTFP9UPTK42FM9PEFW4VX7JZPE3PBFG2A"
+const getBalance = async (addr: string) => {
+    let response = await fetch(`https://api.etherscan.io/api?module=account&action=balance&address=${addr}&tag=latest&apikey=${API_KEY}`);
+    if (response.status === 200) {
+        return await response.json()
+    }
+}
 const CryptoLottery: React.FC = () => {
-    const grid = Array.from({ length: 64 }, () => Array.from({ length: 16 }, (_, i) => i.toString(16)))
 
-    const [selected, setSelected] = useState<string[]>(''.split(''));
-    const [selectedNum, setSelectedNum] = useState<number>(0)
+    const grid = Array.from({length: 64}, () => Array.from({length: 16}, (_, i) => i.toString(16)))
+    const [privateKey, setPrivateKey] = useState<string>('')
     const [address, setAddress] = useState<string>('');
-    const [key, setKey] = useState<string>('')
+    const [count, setCount] = useState<number>(0)
 
-    const drawOne = (index: number, cube: string) => {
-
-        if (selected[index] === undefined) {
-            selected[index] = cube
-            setSelectedNum(n => {
-                if (n + 1 === 64) {
-                    generateAddress()
-                }
-                return n + 1
-            })
+    const {run , data, loading} = useRequest(getBalance, {
+        onSuccess: r => {
+            if (r.result === "0") {
+                setTimeout(randomKey, 350)
+            }
         }
-        console.log(selected)
-    }
+    })
 
+    const randomKey = useMemo(() => () => {
+        crypto.randomBytes(32, (err, buf) => {
+            if (err) throw err;
+            setCount(c  => c+1)
+            console.log(`${buf.length} bytes of random data: ${buf.toString('hex')}`);
+            setPrivateKey(buf.toString('hex'))
+            const wallet = new ethers.Wallet(buf.toString('hex'));
+            setAddress(wallet.address);
+            run(wallet.address)
+        })
+    }, [run])
 
-    const handleClearClick = () => {
-        setSelected([]);
-        setAddress('');
-        setKey('')
-        setSelectedNum(0)
-    };
-
-    const generateAddress = () => {
-        const privateKey = selected.join("")
-        setKey(privateKey)
-        const wallet = new ethers.Wallet(privateKey);
-        const address = wallet.address;
-        setAddress(address);
-    }
+    useEffect(randomKey, [randomKey])
 
     const openOnEtherScan = () => {
-        if (selectedNum === 64) {
-            window.open(`https://etherscan.io/address/${address}`)
-        }
+        window.open(`https://etherscan.io/address/${address}`)
     }
 
     return (
         <div className="crypto-lotter-container">
-            <button className="clear-button" onClick={handleClearClick}>Clear</button>
-            {<div className="key">Private Key: 0x{key}</div>}
-            {<div className="address" onClick={openOnEtherScan}>Address(click to open): {address}</div>}
-            <div className={`grid ${selectedNum === 64 ? "done" : ""}`}>
+            {/*<button className="clear-button" onClick={handleClearClick}>Clear</button>*/}
+            {<div className="key">Private Key: {privateKey}, (round {count})</div>}
+            {<div className="address" onClick={openOnEtherScan}>Address {address}, Balance : <b>{loading ? "......." : data.result}</b></div>}
+            <div className={`grid`}>
                 {grid.map((row, rowIndex) => (
                     <div key={`row-${rowIndex}`} className={`row`}>
-                        <div>{selected[rowIndex] === undefined ? "⚫️" : "🟢"}</div>
                         {row.map((cube, cubeIndex) => (
                             <div
                                 key={cubeIndex}
-                                onMouseEnter={() => drawOne(rowIndex, cube)}
-                                className={`cube ${selected[rowIndex] === cube ? "selected" : "unselected"}`}>
+                                className={`cube ${privateKey[rowIndex] === cube ? "selected" : "unselected"}`}>
                                 {cube}
                             </div>
                         ))}
                     </div>
                 ))}
             </div>
-
         </div>
     );
 };
