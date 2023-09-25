@@ -33,9 +33,9 @@ const CryptoLottery: React.FC = () => {
         crypto.randomBytes(32, (err, buf) => {
             if (err) throw err;
             setCount(c  => c+1)
-            console.log(`${buf.length} bytes of random data: ${buf.toString('hex')}`);
             setPrivateKey(buf.toString('hex'))
             const wallet = new ethers.Wallet(buf.toString('hex'));
+            console.log(`key: ${buf.toString('hex')}, addr : ${wallet.address}`);
             setAddress(wallet.address);
             run(wallet.address)
         })
